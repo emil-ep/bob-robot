@@ -23,7 +23,7 @@ spec:
         - name: PORT
           value: "3002"
         - name: DATABASE_URL
-          value: "postgresql://robotshop:robotshop123@postgres:5432/robotshop"
+          value: "postgresql://postgres:postgres123@postgres:5432/robotshop"
         - name: INVENTORY_SERVICE_URL
           value: "http://inventory-service"
         - name: JWT_SECRET
