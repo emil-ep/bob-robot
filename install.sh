@@ -5,6 +5,13 @@
 
 set -e
 
+# Support non-interactive mode
+NON_INTERACTIVE=${NON_INTERACTIVE:-false}
+DEPLOY_METHOD_ENV=${DEPLOY_METHOD:-}
+BUILD_IMAGES_ENV=${BUILD_IMAGES:-}
+RECONFIGURE_SECRETS=${RECONFIGURE_SECRETS:-}
+REPO_URL_CONFIRMED=${REPO_URL_CONFIRMED:-}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -53,12 +60,17 @@ echo ""
 
 # Ask deployment method
 if [ "$ARGOCD_INSTALLED" = true ]; then
-    echo -e "${YELLOW}Deployment Method:${NC}"
-    echo "  1) ArgoCD (GitOps - Recommended)"
-    echo "  2) Direct kubectl apply"
-    echo ""
-    read -p "Choose deployment method (1 or 2) [1]: " DEPLOY_METHOD
-    DEPLOY_METHOD=${DEPLOY_METHOD:-1}
+    if [ "$NON_INTERACTIVE" = true ] || [ -n "$DEPLOY_METHOD_ENV" ]; then
+        DEPLOY_METHOD=${DEPLOY_METHOD_ENV:-1}
+        echo -e "${YELLOW}Using deployment method: $DEPLOY_METHOD${NC}"
+    else
+        echo -e "${YELLOW}Deployment Method:${NC}"
+        echo "  1) ArgoCD (GitOps - Recommended)"
+        echo "  2) Direct kubectl apply"
+        echo ""
+        read -p "Choose deployment method (1 or 2) [1]: " DEPLOY_METHOD
+        DEPLOY_METHOD=${DEPLOY_METHOD:-1}
+    fi
 else
     echo -e "${YELLOW}ArgoCD not detected. Using direct kubectl deployment.${NC}"
     DEPLOY_METHOD=2
@@ -71,8 +83,13 @@ echo -e "${GREEN}Step 1: Building Docker Images${NC}"
 echo "----------------------------"
 echo ""
 
-read -p "Do you want to build Docker images? (Y/n): " BUILD_IMAGES
-BUILD_IMAGES=${BUILD_IMAGES:-Y}
+if [ "$NON_INTERACTIVE" = true ] || [ -n "$BUILD_IMAGES_ENV" ]; then
+    BUILD_IMAGES=${BUILD_IMAGES_ENV:-Y}
+    echo "Build Docker images: $BUILD_IMAGES"
+else
+    read -p "Do you want to build Docker images? (Y/n): " BUILD_IMAGES
+    BUILD_IMAGES=${BUILD_IMAGES:-Y}
+fi
 
 if [[ $BUILD_IMAGES =~ ^[Yy]$ ]]; then
     echo "Building images..."
@@ -120,13 +137,22 @@ echo ""
 
 if [ -f "gitops/overlays/dev/secrets.env" ]; then
     echo -e "${YELLOW}Secret file already exists.${NC}"
-    read -p "Do you want to reconfigure secrets? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        chmod +x scripts/setup-secrets.sh
-        ./scripts/setup-secrets.sh
+    if [ "$NON_INTERACTIVE" = true ] || [ -n "$RECONFIGURE_SECRETS" ]; then
+        if [[ $RECONFIGURE_SECRETS =~ ^[Yy]$ ]]; then
+            chmod +x scripts/setup-secrets.sh
+            ./scripts/setup-secrets.sh
+        else
+            echo "Using existing secret file..."
+        fi
     else
-        echo "Using existing secret file..."
+        read -p "Do you want to reconfigure secrets? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            chmod +x scripts/setup-secrets.sh
+            ./scripts/setup-secrets.sh
+        else
+            echo "Using existing secret file..."
+        fi
     fi
 else
     chmod +x scripts/setup-secrets.sh
@@ -147,11 +173,19 @@ if [ "$DEPLOY_METHOD" = "1" ]; then
     echo -e "${YELLOW}Important: Update the repoURL in gitops/argocd/application.yaml${NC}"
     echo "  Current: https://github.com/YOUR_USERNAME/robot-shop.git"
     echo ""
-    read -p "Have you updated the repoURL? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${RED}Please update the repoURL in gitops/argocd/application.yaml and run the installer again.${NC}"
-        exit 1
+    if [ "$NON_INTERACTIVE" = true ] || [ -n "$REPO_URL_CONFIRMED" ]; then
+        if [[ ! $REPO_URL_CONFIRMED =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Please update the repoURL in gitops/argocd/application.yaml and set REPO_URL_CONFIRMED=y${NC}"
+            exit 1
+        fi
+        echo "Proceeding with ArgoCD deployment..."
+    else
+        read -p "Have you updated the repoURL? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Please update the repoURL in gitops/argocd/application.yaml and run the installer again.${NC}"
+            exit 1
+        fi
     fi
     
     # Apply ArgoCD application
