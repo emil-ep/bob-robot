@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+gitops/overlays/*/secrets.env
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kubernetes
+*.kubeconfig
+
+# Temporary files
+*.tmp
+.cache/
+
+# Made with Bob

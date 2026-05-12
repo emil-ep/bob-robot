@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: robot-shop-dev
+
+resources:
+  - namespace.yaml
+  - ../../base/database
+  - ../../base/inventory-service
+  - ../../base/order-service
+  - ../../base/user-service
+  - ../../base/frontend
+  - ../../base/load-generator
+
+secretGenerator:
+  - name: instana-secret
+    envs:
+      - secrets.env
+  - name: jwt-secret
+    literals:
+      - JWT_SECRET=robot-shop-jwt-secret-change-in-production
+
+configMapGenerator:
+  - name: frontend-config
+    behavior: merge
+    literals:
+      - API_BASE_URL=http://localhost
+
+images:
+  - name: robot-shop/inventory-service
+    newName: robot-shop/inventory-service
+    newTag: latest
+  - name: robot-shop/order-service
+    newName: robot-shop/order-service
+    newTag: latest
+  - name: robot-shop/user-service
+    newName: robot-shop/user-service
+    newTag: latest
+  - name: robot-shop/frontend
+    newName: robot-shop/frontend
+    newTag: latest
+  - name: robot-shop/load-generator
+    newName: robot-shop/load-generator
+    newTag: latest
+
+# Made with Bob

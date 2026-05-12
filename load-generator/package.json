@@ -1,0 +1,17 @@
+{
+  "name": "load-generator",
+  "version": "1.0.0",
+  "description": "Robot Shop Load Generator",
+  "main": "src/generator.js",
+  "scripts": {
+    "start": "node src/generator.js"
+  },
+  "keywords": ["load-testing", "monitoring"],
+  "author": "Bob",
+  "license": "MIT",
+  "dependencies": {
+    "@instana/collector": "^3.0.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  }
+}
