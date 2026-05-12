@@ -27,10 +27,13 @@ chmod +x install.sh
 
 The installer will:
 - Check prerequisites
+- Authenticate with Docker Hub (to avoid rate limits)
 - Build Docker images
 - Configure secrets (Instana, JWT)
 - Deploy the application
 - Wait for all services to be ready
+
+**Note:** You'll be prompted for Docker Hub credentials during installation to avoid rate limits. If you don't have an account, create one at https://hub.docker.com/signup (it's free).
 
 ### 3. Access the Application
 
@@ -152,7 +155,43 @@ This removes all application resources but preserves:
 - Secret files (for redeployment)
 - Docker images (for faster rebuilds)
 
+## Docker Hub Authentication
+
+The installer automatically handles Docker Hub authentication to avoid rate limits.
+
+### First Time Setup
+
+When you run `./install.sh`, you'll be prompted:
+```
+Docker Hub Username: your-username
+Docker Hub Password or Access Token: ********
+```
+
+### Saved Credentials
+
+Your credentials are saved in `.docker-credentials` (excluded from git) for future builds.
+
+To use saved credentials:
+- The installer will detect and offer to use them
+- Or run `./scripts/docker-login.sh` manually
+
+### Using Access Tokens (Recommended)
+
+Instead of your password, use a Docker Hub access token:
+1. Go to https://hub.docker.com/settings/security
+2. Create a new access token
+3. Use the token as your password
+
 ## Troubleshooting
+
+### Docker Rate Limit Error
+
+If you see "429 Too Many Requests":
+```bash
+./scripts/docker-login.sh
+```
+
+Then retry the installation.
 
 ### Pods Not Starting
 

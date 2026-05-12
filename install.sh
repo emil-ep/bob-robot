@@ -76,6 +76,20 @@ BUILD_IMAGES=${BUILD_IMAGES:-Y}
 
 if [[ $BUILD_IMAGES =~ ^[Yy]$ ]]; then
     echo "Building images..."
+    echo ""
+    
+    # Check for Docker Hub authentication
+    echo -e "${YELLOW}Checking Docker Hub authentication...${NC}"
+    chmod +x scripts/docker-login.sh
+    ./scripts/docker-login.sh
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Docker Hub authentication failed. Cannot proceed with image build.${NC}"
+        exit 1
+    fi
+    
+    echo ""
+    echo "Building images..."
     
     echo "  Building inventory-service..."
     docker build -t robot-shop/inventory-service:latest ./backend/inventory-service
