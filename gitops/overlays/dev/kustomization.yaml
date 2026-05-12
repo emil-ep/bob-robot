@@ -14,8 +14,9 @@ resources:
 
 secretGenerator:
   - name: instana-secret
-    envs:
-      - secrets.env
+    literals:
+      - INSTANA_AGENT_KEY=your-instana-agent-key-here
+      - INSTANA_AGENT_HOST=ingress-red-saas.instana.io
   - name: jwt-secret
     literals:
       - JWT_SECRET=robot-shop-jwt-secret-change-in-production
