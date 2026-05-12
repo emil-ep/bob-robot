@@ -16,7 +16,7 @@ spec:
       containers:
       - name: inventory-service
         image: robot-shop/inventory-service:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         ports:
         - containerPort: 3001
         env:

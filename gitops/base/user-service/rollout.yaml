@@ -16,7 +16,7 @@ spec:
       containers:
       - name: user-service
         image: robot-shop/user-service:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         ports:
         - containerPort: 3000
         env:
