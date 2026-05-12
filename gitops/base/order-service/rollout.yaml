@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: order-service
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+      - name: order-service
+        image: robot-shop/order-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3002
+        env:
+        - name: PORT
+          value: "3002"
+        - name: DATABASE_URL
+          value: "postgresql://robotshop:robotshop123@postgres:5432/robotshop"
+        - name: INVENTORY_SERVICE_URL
+          value: "http://inventory-service"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET
+        - name: INSTANA_AGENT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: instana-secret
+              key: INSTANA_AGENT_KEY
+        - name: INSTANA_AGENT_HOST
+          valueFrom:
+            secretKeyRef:
+              name: instana-secret
+              key: INSTANA_AGENT_HOST
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 5
+          periodSeconds: 5
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20
+      - pause: {duration: 30s}
+      - setWeight: 40
+      - pause: {duration: 30s}
+      - setWeight: 60
+      - pause: {duration: 30s}
+      - setWeight: 80
+      - pause: {duration: 30s}
+
+# Made with Bob

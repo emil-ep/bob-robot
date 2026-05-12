@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: user-service
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: robot-shop/user-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PORT
+          value: "3000"
+        - name: DATABASE_URL
+          value: "postgresql://robotshop:robotshop123@postgres:5432/robotshop"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET
+        - name: INSTANA_AGENT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: instana-secret
+              key: INSTANA_AGENT_KEY
+        - name: INSTANA_AGENT_HOST
+          valueFrom:
+            secretKeyRef:
+              name: instana-secret
+              key: INSTANA_AGENT_HOST
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+  strategy:
+    canary:
+      steps:
+      - setWeight: 25
+      - pause: {duration: 30s}
+      - setWeight: 50
+      - pause: {duration: 30s}
+      - setWeight: 75
+      - pause: {duration: 30s}
+
+# Made with Bob
