@@ -131,7 +131,8 @@ if [[ $BUILD_IMAGES =~ ^[Yy]$ ]]; then
         echo "Importing images to k3s containerd..."
         
         # Create temporary directory for image tarballs
-        TEMP_DIR=$(mktemp -d)
+        TEMP_DIR="/tmp/robot-shop-images-$$"
+        mkdir -p ${TEMP_DIR}
         
         # Save and import each image
         echo "  Importing inventory-service..."
