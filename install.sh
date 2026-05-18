@@ -124,6 +124,41 @@ if [[ $BUILD_IMAGES =~ ^[Yy]$ ]]; then
     docker build -t robot-shop/load-generator:latest ./load-generator
     
     echo -e "${GREEN}✓ All images built successfully${NC}"
+    
+    # Import images to k3s if k3s is being used
+    if command -v k3s &> /dev/null; then
+        echo ""
+        echo "Importing images to k3s containerd..."
+        
+        # Create temporary directory for image tarballs
+        TEMP_DIR=$(mktemp -d)
+        
+        # Save and import each image
+        echo "  Importing inventory-service..."
+        docker save robot-shop/inventory-service:latest -o ${TEMP_DIR}/inventory.tar
+        sudo k3s ctr images import ${TEMP_DIR}/inventory.tar
+        
+        echo "  Importing order-service..."
+        docker save robot-shop/order-service:latest -o ${TEMP_DIR}/order.tar
+        sudo k3s ctr images import ${TEMP_DIR}/order.tar
+        
+        echo "  Importing user-service..."
+        docker save robot-shop/user-service:latest -o ${TEMP_DIR}/user.tar
+        sudo k3s ctr images import ${TEMP_DIR}/user.tar
+        
+        echo "  Importing frontend..."
+        docker save robot-shop/frontend:latest -o ${TEMP_DIR}/frontend.tar
+        sudo k3s ctr images import ${TEMP_DIR}/frontend.tar
+        
+        echo "  Importing load-generator..."
+        docker save robot-shop/load-generator:latest -o ${TEMP_DIR}/loadgen.tar
+        sudo k3s ctr images import ${TEMP_DIR}/loadgen.tar
+        
+        # Cleanup
+        rm -rf ${TEMP_DIR}
+        
+        echo -e "${GREEN}✓ All images imported to k3s containerd${NC}"
+    fi
 else
     echo "Skipping image build. Make sure images are available."
 fi
