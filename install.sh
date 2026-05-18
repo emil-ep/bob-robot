@@ -130,33 +130,21 @@ if [[ $BUILD_IMAGES =~ ^[Yy]$ ]]; then
         echo ""
         echo "Importing images to k3s containerd..."
         
-        # Create temporary directory for image tarballs
-        TEMP_DIR="/tmp/robot-shop-images-$$"
-        mkdir -p ${TEMP_DIR}
-        
-        # Save and import each image
+        # Save and import each image directly using pipes
         echo "  Importing inventory-service..."
-        docker save robot-shop/inventory-service:latest -o ${TEMP_DIR}/inventory.tar
-        sudo k3s ctr images import ${TEMP_DIR}/inventory.tar
+        docker save robot-shop/inventory-service:latest | sudo k3s ctr images import -
         
         echo "  Importing order-service..."
-        docker save robot-shop/order-service:latest -o ${TEMP_DIR}/order.tar
-        sudo k3s ctr images import ${TEMP_DIR}/order.tar
+        docker save robot-shop/order-service:latest | sudo k3s ctr images import -
         
         echo "  Importing user-service..."
-        docker save robot-shop/user-service:latest -o ${TEMP_DIR}/user.tar
-        sudo k3s ctr images import ${TEMP_DIR}/user.tar
+        docker save robot-shop/user-service:latest | sudo k3s ctr images import -
         
         echo "  Importing frontend..."
-        docker save robot-shop/frontend:latest -o ${TEMP_DIR}/frontend.tar
-        sudo k3s ctr images import ${TEMP_DIR}/frontend.tar
+        docker save robot-shop/frontend:latest | sudo k3s ctr images import -
         
         echo "  Importing load-generator..."
-        docker save robot-shop/load-generator:latest -o ${TEMP_DIR}/loadgen.tar
-        sudo k3s ctr images import ${TEMP_DIR}/loadgen.tar
-        
-        # Cleanup
-        rm -rf ${TEMP_DIR}
+        docker save robot-shop/load-generator:latest | sudo k3s ctr images import -
         
         echo -e "${GREEN}✓ All images imported to k3s containerd${NC}"
     fi
